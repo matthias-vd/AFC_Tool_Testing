@@ -10,7 +10,7 @@ import AcademiejarenPage from "./pages/AcademiejarenPage"
 import EvenementenPage from "./pages/EvenementenPage"
 import DataAnalysePage from "./pages/DataAnalysePage"
 import TrashPage from "./pages/TrashPage"
-
+import Matthias from "./pages/Matthias"
 
 const router = createBrowserRouter([
   {
@@ -43,6 +43,10 @@ const router = createBrowserRouter([
       {
         path: "/prullenbak",
         element: <TrashPage />,
+      },      
+      {
+        path: "/matthias",
+        element: <Matthias />,
       },      
     ],
   },
