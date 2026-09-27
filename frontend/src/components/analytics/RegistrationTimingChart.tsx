@@ -131,26 +131,6 @@ export function RegistrationTimingChart({ data }: RegistrationTimingChartProps) 
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Days before event */}
-      {data.byDaysBeforeEvent.some((b) => b.count > 0) && (
-        <div>
-          <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Wanneer schrijven mensen zich in (vóór evenement)</p>
-          <ResponsiveContainer width="100%" height={140}>
-            <BarChart data={data.byDaysBeforeEvent} margin={{ top: 0, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#475569' }} tickLine={false} axisLine={false} angle={-20} textAnchor="end" interval={0} />
-              <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-              <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-                {data.byDaysBeforeEvent.map((entry, i) => (
-                  <Cell key={`cell-${i}`} fill={entry.count === maxDaysBefore ? '#10b981' : '#041c3a'} opacity={0.5 + (entry.count / Math.max(maxDaysBefore, 1)) * 0.5} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
     </div>
   );
 }

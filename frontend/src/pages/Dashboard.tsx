@@ -12,7 +12,6 @@ export function Dashboard() {
     >
       <div className="flex flex-col gap-8">
         <AcademicYearBanner />
-        {/* Upcoming events readiness — replaces generic stat cards */}
         <UpcomingReadiness />
         <QuickActions />
         <RecentEvents />
