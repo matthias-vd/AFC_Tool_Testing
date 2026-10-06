@@ -70,15 +70,15 @@ export default function Ticketing() {
             <div>
               <h1 className="text-2xl font-black tracking-tight text-[#041c3a]">Ticketing</h1>
               <p className="mt-1 text-sm text-slate-500">
-                Publieke inschrijvingen, QR-tickets en check-in — gesynchroniseerd met Evenementen
-                {currentYear ? ` · ${currentYear.naam}` : ''}.
+                Work-in-progress, alpha-stage-ish? Ik durf het nog geen beta te noemen. AJ
+                {currentYear ? `  ${currentYear.naam}` : ''}.
               </p>
               <div className="mt-2 h-0.5 w-24 bg-gradient-to-r from-[#041c3a] to-[#ed6425] rounded-full" />
             </div>
           </div>
           <Button asChild className="bg-[#ed6425] hover:bg-[#d5571f] text-white">
             <a href="/" target="_blank" rel="noreferrer">
-              <ExternalLink className="h-4 w-4" /> Publieke inschrijving
+              <ExternalLink className="h-4 w-4" /> Front-end
             </a>
           </Button>
         </div>
@@ -132,12 +132,7 @@ export default function Ticketing() {
 
           <TabsContent value="events" className="space-y-4">
             <p className="text-sm text-slate-500">
-              Events met ticketing aan. Schakel ticketing in via{' '}
-              <Link to="/evenementen" className="font-semibold text-[#ed6425] hover:underline">
-                Evenementen
-              </Link>{' '}
-              → event bewerken → sectie Ticketing.
-            </p>
+              Hieronder staat er een lijstje met alle events/workshops/projects waar de ticketing-optie actief is. Dit kan steeds in- of uitgeschakeld worden door het event terug in conceptfase te zetten.</p>
 
             {eventsLoading ? (
               <div className="flex items-center gap-2 text-slate-500 py-8">
@@ -145,9 +140,9 @@ export default function Ticketing() {
               </div>
             ) : events.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center">
-                <p className="font-semibold text-[#041c3a]">Nog geen ticket-events</p>
+                <p className="font-semibold text-[#041c3a]">Helemaal leeg</p>
                 <p className="mt-2 text-sm text-slate-500">
-                  Open een event of workshop in Evenementen en zet ticketing aan.
+                    Geen actieve events (waar ticketing op geactiveerd is).
                 </p>
                 <Button asChild className="mt-5 bg-[#041c3a] text-white hover:bg-[#041c3a]/90">
                   <Link to="/evenementen">Naar Evenementen</Link>
@@ -222,7 +217,7 @@ export default function Ticketing() {
             )}
 
             <p className="text-xs text-slate-400">
-              Totaal platform (alle jaren): {stats.total} ticket-inschrijvingen.
+              Totale inschrijvingen sinds inception: {stats.total}
             </p>
           </TabsContent>
 
