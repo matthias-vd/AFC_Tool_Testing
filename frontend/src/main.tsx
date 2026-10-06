@@ -11,6 +11,7 @@ import EvenementenPage from "./pages/EvenementenPage"
 import DataAnalysePage from "./pages/DataAnalysePage"
 import TrashPage from "./pages/TrashPage"
 import Ticketing from "./pages/Ticketing"
+import QRGenerator from "./pages/qr/QRGenerator"
 import PublicEventsPage from "./pages/public/PublicEventsPage"
 import PublicEventDetailPage from "./pages/public/PublicEventDetailPage"
 import PublicTicketPage from "./pages/public/PublicTicketPage"
@@ -81,6 +82,10 @@ const router = createBrowserRouter([
       {
         path: "/ticketing",
         element: <Ticketing />,
+      },
+      {
+        path: "/qrgenerator",
+        element: <QRGenerator />,
       },
     ],
   },

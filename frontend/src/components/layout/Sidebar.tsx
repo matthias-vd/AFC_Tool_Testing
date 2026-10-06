@@ -7,6 +7,7 @@ import {
   Zap,
   Trash2,
   Ticket,
+  QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,11 @@ const navItems = [
     label: 'Academiejaren',
     href: '/academiejaren',
     icon: GraduationCap,
+  },
+  {
+    label: 'QR Generator',
+    href: '/qrgenerator',
+    icon: QrCode,
   },
   {
     label: 'Ticketing',

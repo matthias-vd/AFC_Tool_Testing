@@ -5,15 +5,18 @@ Publieke inschrijvingen schrijven naar dezelfde `registrations`-tabel met `bron 
 
 ## Setup (eenmalig)
 
+### Van “basic” schema (sqldb.rtf) → volledige tool
 1. Open de Supabase SQL editor.
-2. Voer **eerst apart** uit: [`supabase/migrations/000_add_afc_ticket_bron.sql`](supabase/migrations/000_add_afc_ticket_bron.sql)
-3. Voer daarna uit: [`supabase/migrations/001_ticketing.sql`](supabase/migrations/001_ticketing.sql)
-4. Controleer dat storage-buckets `ticket-cvs` en `ticket-images` bestaan.
-5. Als CV-upload faalt op RLS: voer ook
-   [`supabase/migrations/002_ticket_cvs_storage_rls.sql`](supabase/migrations/002_ticket_cvs_storage_rls.sql) uit.
-6. Als inschrijven klaagt over `ingeschreven_op`/text: voer
-   [`supabase/migrations/003_fix_register_afc_ticket_types.sql`](supabase/migrations/003_fix_register_afc_ticket_types.sql) uit
-   (frontend heeft ondertussen een fallback-insert).
+2. Open [`supabase/migrations/010_adapt_basic_schema_to_full_tool.sql`](supabase/migrations/010_adapt_basic_schema_to_full_tool.sql).
+3. Run **Sectie A** alleen (enums / `afc_ticket`).
+4. Run **Sectie B** (kolommen, RLS, storage, RPCs).
+
+Dat voegt o.a. toe: ticketing-velden op `events`/`registrations`, zet `ingeschreven_op` om naar `timestamptz`, buckets `ticket-cvs` / `ticket-images`, RPCs `register_afc_ticket` / `get_ticket_by_token` / `cancel_ticket_by_token`, en basis-RLS.
+
+### Of stapsgewijs (als je al half gemigreerd bent)
+1. [`000_add_afc_ticket_bron.sql`](supabase/migrations/000_add_afc_ticket_bron.sql)
+2. [`001_ticketing.sql`](supabase/migrations/001_ticketing.sql)
+3. Eventueel [`002_ticket_cvs_storage_rls.sql`](supabase/migrations/002_ticket_cvs_storage_rls.sql) / [`003_fix_register_afc_ticket_types.sql`](supabase/migrations/003_fix_register_afc_ticket_types.sql)
 
 Als je een check-constraint op `registrations.bron` hebt, voeg `'afc_ticket'` toe (zie commentaar in de migratie).
 

@@ -224,14 +224,17 @@ export async function registerForEvent(
   // Fallback when DB function still has the old text cast (run 003_fix_*.sql to fix).
   if (!rpcNeedsFallback) {
     await supabase.storage.from(CV_BUCKET).remove([cvPath]);
-    throw new Error(rpcMessage.replace(/^.*ERROR:\s*/i, '').split('\n')[0] || 'Inschrijven mislukt.');
+    throw new Error(
+      rpcMessage.replace(/^.*ERROR:\s*/i, '').split('\n')[0] || 'Inschrijven mislukt.',
+    );
   }
 
   const now = new Date().toISOString();
-  const { error: insertError } = await supabase.from('registrations').insert({
+  // Prefer registered_at only; some DBs still reject text→timestamptz on ingeschreven_op.
+  const baseRow = {
     id: registrationId,
     event_id: event.id,
-    bron: 'afc_ticket',
+    bron: 'afc_ticket' as const,
     email,
     naam: name,
     phone,
@@ -245,8 +248,16 @@ export async function registerForEvent(
     checked_in_at: null,
     cancelled_at: null,
     registered_at: now,
+  };
+
+  let { error: insertError } = await supabase.from('registrations').insert({
+    ...baseRow,
     ingeschreven_op: now,
   });
+
+  if (insertError && /ingeschreven_op|timestamp|type text/i.test(insertError.message)) {
+    ({ error: insertError } = await supabase.from('registrations').insert(baseRow));
+  }
 
   if (insertError) {
     await supabase.storage.from(CV_BUCKET).remove([cvPath]);

@@ -166,7 +166,7 @@ DECLARE
   v_cancelled_id uuid;
   v_count int;
   v_reg_id uuid;
-  v_now timestamptz := now();
+  v_now timestamptz := clock_timestamp();
 BEGIN
   SELECT * INTO v_event
   FROM events

@@ -1,5 +1,5 @@
--- Fix: ingeschreven_op is timestamptz, not text.
--- Re-run this after 001 if you already applied the old function.
+-- Fix: ingeschreven_op / registered_at are timestamptz — never cast to text.
+-- Run this in the Supabase SQL editor (CREATE OR REPLACE is enough).
 
 CREATE OR REPLACE FUNCTION public.register_afc_ticket(
   p_event_slug text,
@@ -23,7 +23,7 @@ DECLARE
   v_cancelled_id uuid;
   v_count int;
   v_reg_id uuid;
-  v_now timestamptz := now();
+  v_now timestamptz := clock_timestamp();
 BEGIN
   SELECT * INTO v_event
   FROM events
@@ -104,10 +104,23 @@ BEGIN
       cv_original_name, cv_path, ticket_token, ticket_code,
       checked_in, checked_in_at, cancelled_at, registered_at, ingeschreven_op
     ) VALUES (
-      v_reg_id, v_event.id, 'afc_ticket'::registratie_bron, lower(trim(p_email)), trim(p_name),
-      trim(p_phone), coalesce(p_extra_info, ''), p_food_preference,
-      p_cv_original_name, p_cv_path, p_ticket_token, left(p_ticket_token, 12),
-      false, null, null, v_now, v_now
+      v_reg_id,
+      v_event.id,
+      'afc_ticket'::registratie_bron,
+      lower(trim(p_email)),
+      trim(p_name),
+      trim(p_phone),
+      coalesce(p_extra_info, ''),
+      p_food_preference,
+      p_cv_original_name,
+      p_cv_path,
+      p_ticket_token,
+      left(p_ticket_token, 12),
+      false,
+      null,
+      null,
+      v_now,
+      v_now
     );
   END IF;
 
@@ -117,3 +130,5 @@ BEGIN
   );
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.register_afc_ticket(text, text, text, text, text, text, text, text, text) TO anon, authenticated;

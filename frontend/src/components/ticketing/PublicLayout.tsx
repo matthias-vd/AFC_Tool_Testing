@@ -16,7 +16,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           />
         </Link>
         <Link to="/ticketing" className="text-sm text-muted hover:text-ink">
-          Staff
+          Organisatie
         </Link>
       </header>
       {children}
