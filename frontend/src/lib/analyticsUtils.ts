@@ -91,7 +91,52 @@ export interface TimingData {
   earlyBirdCount: number;      // > 14 days before
   earlyBirdPct: number;
 }
+export interface DaysBeforeBucket {
+  daysBefore: number | string; // number, or '14+' for overflow bucket
+  count: number;
+}
 
+function toDateOnly(dateInput: string): Date {
+  const d = new Date(dateInput);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+export function computeDaysBeforeDistribution(events: EventData[]): DaysBeforeBucket[] {
+  const buckets = new Map<number, number>();
+  const OVERFLOW_THRESHOLD = 21;
+
+  events.forEach((event) => {
+    if (!event.event_datum) return;
+    const eventDateOnly = toDateOnly(event.event_datum);
+
+    (event.registrations ?? []).forEach((reg) => {
+      const submittedAt = reg.ingediend_op ?? reg.ingeschreven_op;
+      if (!submittedAt) return;
+
+      const regDateOnly = toDateOnly(submittedAt);
+      const diffMs = eventDateOnly.getTime() - regDateOnly.getTime();
+      const daysBefore = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (daysBefore < 0) return;
+
+      const key = daysBefore > OVERFLOW_THRESHOLD ? OVERFLOW_THRESHOLD + 1 : daysBefore;
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    });
+  });
+
+  // Fill in every day from 0 to OVERFLOW_THRESHOLD, even if count is 0
+  const result: DaysBeforeBucket[] = [];
+  for (let day = 0; day <= OVERFLOW_THRESHOLD; day++) {
+    result.push({ daysBefore: day, count: buckets.get(day) ?? 0 });
+  }
+  // Overflow bucket (only include if it has data, or always — your call)
+  result.push({
+    daysBefore: `${OVERFLOW_THRESHOLD}+`,
+    count: buckets.get(OVERFLOW_THRESHOLD + 1) ?? 0,
+  });
+
+  return result;
+}
 // Helper: parse timestamptz string of number correct
 function parseTs(ts: string | number | null | undefined): Date | null {
   if (!ts) return null;

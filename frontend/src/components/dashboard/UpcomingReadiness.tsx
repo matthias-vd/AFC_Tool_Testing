@@ -142,9 +142,10 @@ export function UpcomingReadiness() {
       const today = new Date().toISOString().split('T')[0];
 
       const { data } = await supabase
-        .from('events_with_registration_count')
-        .select('id, titel, status, type, event_datum, locatie, beschrijving_website, max_deelnemers, start_tijd, registratie_aantal, created_by')
+        .from('events')
+        .select('id, titel, status, type, event_datum, locatie, beschrijving_website, beschrijving_sociaal, max_deelnemers, start_tijd, created_by')
         .eq('academic_year_id', currentYear.id)
+        .is('deleted_at', null)
         .not('status', 'eq', 'compleet')
         .or(`event_datum.gte.${today},event_datum.is.null`)
         .order('event_datum', { ascending: true, nullsFirst: false })

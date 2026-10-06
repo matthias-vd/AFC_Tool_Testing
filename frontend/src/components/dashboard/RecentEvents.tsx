@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Users, ArrowRight, CalendarDays, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { EventWithCount } from '@/types';
 import { StatusBadge } from '@/components/ui/badges';
@@ -41,8 +41,9 @@ export function RecentEvents() {
   useEffect(() => {
     async function fetchEvents() {
       const { data } = await supabase
-        .from('events_with_registration_count')
+        .from('events')
         .select('*')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(8);
 
@@ -52,7 +53,7 @@ export function RecentEvents() {
 
     fetchEvents();
   }, []);
-
+  
   function handleRowClick(event: EventWithCount) {
     if (!EDITABLE_STATUSES.has(event.status)) return;
     // Navigate to evenementen page with the event id as a query param

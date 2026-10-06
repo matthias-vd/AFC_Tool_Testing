@@ -56,7 +56,10 @@ const ScoreBar = ({ score, max = 5 }: { score: number; max?: number }) => (
     <span className="text-sm font-black text-[#041c3a] w-8 text-right">{score}</span>
   </div>
 );
-
+function formatTijd(tijd: string | null): string {
+  if (!tijd) return '';
+  return tijd.slice(0, 5); // "14:00:00" -> "14:00"
+}
 // ─── main component ───────────────────────────────────────────────────────────
 
 export function EventDetail({ event }: EventDetailProps) {
@@ -115,8 +118,9 @@ export function EventDetail({ event }: EventDetailProps) {
           <div className="flex items-center gap-2.5 text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
             <Clock className="w-4 h-4 text-[#ed6425] flex-shrink-0" />
             <span className="font-medium">
-              {event.deuren_open && `Deuren: ${event.deuren_open} · `}
-              {event.start_tijd} – {event.einde_tijd}
+              {event.deuren_open && `Deuren: ${formatTijd(event.deuren_open)}  `}
+              <br />
+              {`Uur: ${formatTijd(event.start_tijd)}`} – {formatTijd(event.einde_tijd)}
             </span>
           </div>
         )}

@@ -43,6 +43,7 @@ import { RetentionFunnelChart } from '../components/analytics/RetentionFunnelCha
 import { EventSuccessScoreChart } from '../components/analytics/EventSuccessScoreChart';
 import { ChannelEffectivenessChart } from '../components/analytics/ChannelEffectivenessChart';
 import { EventMultiSelectFilter } from '../components/analytics/EventMultiSelectFilter';
+import { RegistrationDaysBeforeChart } from '../components/analytics/RegistrationDaysBeforeChart';
 import {
   computeKPIs,
   computeFacultyDistribution,
@@ -60,6 +61,7 @@ import {
   computeRetentionFunnel,
   computeEventSuccessScores,
   computeChannelEffectiveness,
+  computeDaysBeforeDistribution,
 } from '../lib/analyticsUtils';
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
@@ -116,7 +118,11 @@ export default function DataAnalysePage() {
   const retentionFunnel  = useMemo(() => computeRetentionFunnel(filteredEvents), [filteredEvents]);
   const successScores    = useMemo(() => computeEventSuccessScores(filteredEvents), [filteredEvents]);
   const channelData      = useMemo(() => computeChannelEffectiveness(filteredEvents), [filteredEvents]);
-
+  const daysBeforeData   = useMemo(() => computeDaysBeforeDistribution(filteredEvents), [filteredEvents]);
+  console.log("daysbefore");
+  
+  console.log(daysBeforeData);
+  
   const hasData = !loading && filteredEvents.length > 0;
   const hasNoEvents = !loading && !error && allEvents.length === 0;
   const hasNoFilteredEvents = !loading && !error && allEvents.length > 0 && filteredEvents.length === 0;
@@ -456,8 +462,13 @@ export default function DataAnalysePage() {
                   <RegistrationTimingChart data={timingData} />
                 </ChartCard>
 
-                {/* Timing stat pills */}
-                <TimingInsightCards timingData={timingData} />
+                <ChartCard
+                  title="Dagen vóór evenement"
+                  subtitle="Hoeveel mensen schreven zich hoeveel dagen op voorhand in"
+                  badge={`${daysBeforeData.reduce((s, d) => s + d.count, 0)} inschrijvingen`}
+                >
+                  <RegistrationDaysBeforeChart data={daysBeforeData} />
+                </ChartCard>
               </div>
             )}
 
@@ -548,29 +559,6 @@ function AudienceBreakdownCard({ studyYearData }: { studyYearData: { label: stri
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-/** Small stat pills for timing insights */
-function TimingInsightCards({ timingData }: { timingData: ReturnType<typeof import('../lib/analyticsUtils').computeTimingData> }) {
-  const stats = [
-    { emoji: '⚡', label: 'Last-minute', value: `${timingData.lastMinutePct}%`, sub: 'schreef zich dag zelf of dag ervoor in' },
-    { emoji: '🐦', label: 'Early birds', value: `${timingData.earlyBirdPct}%`, sub: 'schreef zich >2 weken op voorhand in' },
-    { emoji: '🕐', label: 'Piekuur',     value: `${timingData.peakHour}u`,     sub: 'meeste inschrijvingen' },
-    { emoji: '📅', label: 'Piekdag',     value: timingData.peakDay,            sub: 'drukste dag van de week' },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {stats.map(s => (
-        <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-          <div className="text-xl mb-1">{s.emoji}</div>
-          <div className="text-xl font-bold text-[#041c3a]">{s.value}</div>
-          <div className="text-[11px] font-medium text-[#ed6425] mb-0.5">{s.label}</div>
-          <div className="text-[11px] text-slate-400">{s.sub}</div>
-        </div>
-      ))}
     </div>
   );
 }
