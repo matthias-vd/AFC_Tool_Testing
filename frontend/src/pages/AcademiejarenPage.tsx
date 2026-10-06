@@ -53,40 +53,19 @@ export default function AcademiejarenPage() {
 
   return (
     <AppLayout
-      title="Academiejaren Historiek"
-      subtitle="Overzicht van alle jaren"
+      title="Academiejaren"
+      subtitle="Overzicht van alle academiejaren en hun evenementen"
+      actions={<CreateAcademicYearDialog onConfirm={handleCreate} loading={createLoading} />}
     >
-      <div className="p-6 max-w-screen-2xl mx-auto space-y-6">
-
-        {/* Page header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#041c3a]">
-                <GraduationCap className="h-5 w-5 text-[#ed6425]" />
-              </div>
-              <h1 className="text-2xl font-bold text-[#041c3a] tracking-tight">
-                Academiejaren
-              </h1>
-            </div>
-            <p className="text-sm text-slate-500 ml-[52px]">
-              Overzicht van alle academiejaren en hun evenementen.
-            </p>
-          </div>
-          <CreateAcademicYearDialog onConfirm={handleCreate} loading={createLoading} />
-        </div>
-
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-[#ed6425]/30 via-[#041c3a]/10 to-transparent" />
-
+      <>
         {/* Current year highlight */}
         {currentYear && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#041c3a] border border-[#041c3a]">
-            <span className="h-2 w-2 rounded-full bg-[#ed6425] animate-pulse shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl border border-[#041c3a] bg-[#041c3a] px-4 py-3">
+            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#ed6425]" />
             <p className="text-sm text-white">
               Huidig actief academiejaar:{' '}
               <strong className="font-semibold text-[#ed6425]">{currentYear.naam}</strong>
-              <span className="text-slate-300 ml-2">
+              <span className="ml-2 text-slate-300">
                 ({currentYear.total_events} evenementen · {currentYear.total_registrations} inschrijvingen)
               </span>
             </p>
@@ -96,18 +75,18 @@ export default function AcademiejarenPage() {
         {/* Loading state */}
         {loading && (
           <div className="flex items-center justify-center py-16 text-slate-400">
-            <Loader2 className="h-5 w-5 animate-spin mr-3 text-[#ed6425]" />
+            <Loader2 className="h-5 w-5 mr-3 animate-spin text-[#ed6425]" />
             <span className="text-sm">Academiejaren laden...</span>
           </div>
         )}
 
         {/* Error state */}
         {error && !loading && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
-            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-700">Fout bij laden</p>
-              <p className="text-xs text-red-500 mt-0.5">{error}</p>
+              <p className="mt-0.5 text-xs text-red-500">{error}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={refetch} className="text-red-600 hover:text-red-700">
               <RefreshCw className="h-4 w-4 mr-1" /> Opnieuw
@@ -118,12 +97,12 @@ export default function AcademiejarenPage() {
         {/* Empty state */}
         {!loading && !error && years.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-[#041c3a]/5 border border-[#041c3a]/10 flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#041c3a]/10 bg-[#041c3a]/5">
               <GraduationCap className="h-8 w-8 text-[#041c3a]/30" />
             </div>
-            <h3 className="text-base font-semibold text-[#041c3a] mb-1">Nog geen academiejaren</h3>
-            <p className="text-sm text-slate-400 mb-6">
-              Maak je eerste academiejaar aan via de knop hierboven.
+            <h3 className="mb-1 text-base font-semibold text-[#041c3a]">Nog geen academiejaren</h3>
+            <p className="mb-6 text-sm text-slate-400">
+              Maak je eerste academiejaar aan via de knop rechtsboven.
             </p>
           </div>
         )}
@@ -148,7 +127,6 @@ export default function AcademiejarenPage() {
           </div>
         )}
 
-        {/* Event detail sheet */}
         <EventDetailSheet event={selectedEvent} onClose={clearEvent} />
 
         <EmailExportDialog
@@ -158,8 +136,7 @@ export default function AcademiejarenPage() {
           emails={exportedEmails}
           loading={exportLoading}
         />
-        
-        {/* Set current year confirmation */}
+
         <SetCurrentYearDialog
           year={pendingSetCurrentYear}
           currentYear={currentYear}
@@ -167,7 +144,7 @@ export default function AcademiejarenPage() {
           onCancel={() => setPendingSetCurrentYear(null)}
           loading={setCurrentLoading}
         />
-      </div>
+      </>
     </AppLayout>
   );
 }

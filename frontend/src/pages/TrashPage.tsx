@@ -71,43 +71,31 @@ export default function TrashPage() {
   const isEmpty = !loading && trashedEvents.length === 0 && trashedYears.length === 0;
 
   return (
-    <AppLayout title="Prullenbak" subtitle="Verwijderde items - herstel of verwijder definitief">
-      <div className="p-6 max-w-screen-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#041c3a]">
-            <Trash2 className="h-5 w-5 text-[#ed6425]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#041c3a] tracking-tight">Prullenbak</h1>
-            <p className="text-sm text-slate-500">
-              Verwijderde evenementen en academiejaren blijven hier staan tot je ze
-              herstelt of definitief verwijdert.
-            </p>
-          </div>
-        </div>
-
-        <div className="h-px bg-gradient-to-r from-[#ed6425]/30 via-[#041c3a]/10 to-transparent" />
-
+    <AppLayout
+      title="Prullenbak"
+      subtitle="Verwijderde evenementen en academiejaren — herstel of verwijder definitief"
+    >
+      <>
         {loading && (
           <div className="flex items-center justify-center py-16 text-slate-400">
-            <Loader2 className="h-5 w-5 animate-spin mr-3 text-[#ed6425]" />
+            <Loader2 className="h-5 w-5 mr-3 animate-spin text-[#ed6425]" />
             <span className="text-sm">Prullenbak laden...</span>
           </div>
         )}
 
         {error && !loading && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
-            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
         {isEmpty && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-[#041c3a]/5 border border-[#041c3a]/10 flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#041c3a]/10 bg-[#041c3a]/5">
               <Trash2 className="h-8 w-8 text-[#041c3a]/30" />
             </div>
-            <h3 className="text-base font-semibold text-[#041c3a] mb-1">Prullenbak is leeg</h3>
+            <h3 className="mb-1 text-base font-semibold text-[#041c3a]">Prullenbak is leeg</h3>
             <p className="text-sm text-slate-400">Verwijderde items verschijnen hier.</p>
           </div>
         )}
@@ -235,7 +223,6 @@ export default function TrashPage() {
             </div>
           </div>
         )}
-      </div>
 
       <AlertDialog open={!!pendingAction} onOpenChange={(v) => !v && setPendingAction(null)}>
         <AlertDialogContent className="border-slate-200 shadow-2xl max-w-md">
@@ -267,6 +254,7 @@ export default function TrashPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </>
     </AppLayout>
   );
 }

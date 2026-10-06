@@ -6,9 +6,18 @@ interface AppLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
+  actions?: React.ReactNode;
+  /** Skip max-width / spacing wrapper (e.g. full-bleed iframe pages). */
+  fullBleed?: boolean;
 }
 
-export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
+export function AppLayout({
+  children,
+  title,
+  subtitle,
+  actions,
+  fullBleed = false,
+}: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-zinc-50/60">
       <Sidebar />
@@ -22,10 +31,15 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           },
         }}
       />
-      {/* Main content: offset for sidebar */}
       <div className="pl-64">
-        <Header title={title} subtitle={subtitle} />
-        <main className="px-8 py-8">{children}</main>
+        <Header title={title} subtitle={subtitle} actions={actions} />
+        <main className={fullBleed ? undefined : 'px-8 py-8'}>
+          {fullBleed ? (
+            children
+          ) : (
+            <div className="mx-auto max-w-screen-2xl space-y-6">{children}</div>
+          )}
+        </main>
       </div>
     </div>
   );

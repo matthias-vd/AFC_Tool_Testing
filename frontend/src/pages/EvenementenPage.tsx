@@ -123,13 +123,10 @@ export default function EvenementenPage() {
 
   if (!currentYear) {
     return (
-      <AppLayout title="evenementen overzicht" subtitle="Overzicht van alle evenementen">
-        <div className="flex items-center justify-center h-64">
+      <AppLayout title="Evenementen" subtitle="Overzicht van alle evenementen">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#041c3a]/10 flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">📅</span>
-            </div>
-            <p className="text-slate-500 font-medium">Geen huidig academiejaar gevonden.</p>
+            <p className="font-medium text-slate-500">Geen huidig academiejaar gevonden.</p>
           </div>
         </div>
       </AppLayout>
@@ -137,22 +134,11 @@ export default function EvenementenPage() {
   }
 
   return (
-    <AppLayout title="evenementen overzicht" subtitle="Overzicht van alle evenementen">
-      <div className="p-6 max-w-screen-xl mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-1 h-10 rounded-full bg-gradient-to-b from-[#041c3a] to-[#ed6425]" />
-            <div>
-              <h1 className="text-2xl font-black text-[#041c3a] tracking-tight">Evenementen</h1>
-              <p className="text-sm text-slate-500 mt-0.5">
-                Overzicht van alle activiteiten –{' '}
-                <span className="font-semibold text-[#ed6425]">{currentYear.naam}</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
+    <AppLayout
+      title="Evenementen"
+      subtitle={`Overzicht van alle activiteiten · ${currentYear.naam}`}
+    >
+      <>
         <EventsOverview
           events={events}
           onNewEvent={handleNewEvent}
@@ -196,7 +182,7 @@ export default function EvenementenPage() {
           onCancel={() => setAdvanceTarget(null)}
           loading={mutations.loading}
         />
-      </div>
+      </>
     </AppLayout>
   );
 }

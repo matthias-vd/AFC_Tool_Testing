@@ -60,29 +60,22 @@ export default function Ticketing() {
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#041c3a] shadow-md">
-              <Ticket className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-[#041c3a]">Ticketing</h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Work-in-progress, alpha-stage-ish? Ik durf het nog geen beta te noemen. AJ
-                {currentYear ? `  ${currentYear.naam}` : ''}.
-              </p>
-              <div className="mt-2 h-0.5 w-24 bg-gradient-to-r from-[#041c3a] to-[#ed6425] rounded-full" />
-            </div>
-          </div>
-          <Button asChild className="bg-[#ed6425] hover:bg-[#d5571f] text-white">
-            <a href="/" target="_blank" rel="noreferrer">
-              <ExternalLink className="h-4 w-4" /> Front-end
-            </a>
-          </Button>
-        </div>
-
+    <AppLayout
+      title="Ticketing"
+      subtitle={
+        currentYear
+          ? `Inschrijvingen, scanner en deelnemers · ${currentYear.naam}`
+          : 'Inschrijvingen, scanner en deelnemers'
+      }
+      actions={
+        <Button asChild className="h-8 bg-[#ed6425] text-white hover:bg-[#d5571f]">
+          <a href="/" target="_blank" rel="noreferrer">
+            <ExternalLink className="h-3.5 w-3.5" /> Front-end
+          </a>
+        </Button>
+      }
+    >
+      <>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
             { label: 'Inschrijvingen', value: yearStats.total },
@@ -103,12 +96,12 @@ export default function Ticketing() {
 
         {error && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <p className="font-semibold">Kon ticket-data niet laden</p>
               <p className="mt-1 text-amber-800/80">
                 {error}. Heb je de SQL-migratie{' '}
-                <code className="text-xs bg-amber-100 px-1 rounded">
+                <code className="rounded bg-amber-100 px-1 text-xs">
                   supabase/migrations/001_ticketing.sql
                 </code>{' '}
                 al uitgevoerd?
@@ -234,7 +227,7 @@ export default function Ticketing() {
             />
           </TabsContent>
         </Tabs>
-      </div>
+      </>
     </AppLayout>
   );
 }

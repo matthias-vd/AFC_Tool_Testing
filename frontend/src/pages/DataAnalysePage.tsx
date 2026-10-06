@@ -131,42 +131,24 @@ export default function DataAnalysePage() {
     setSelectedEventIds([]);
   }, [selectedYearId, selectedEventType]);
   return (
-    <AppLayout title="Data Analyse" subtitle="Strategisch inzicht per academiejaar">
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
-
-        {/* ── Page header ─────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#041c3a]">
-                <BarChart2 className="h-5 w-5 text-[#ed6425]" />
-              </div>
-              <h1 className="text-2xl font-bold text-[#041c3a] tracking-tight">
-                Data Analyse
-              </h1>
-            </div>
-            <p className="text-sm text-slate-500 ml-[52px]">
-              Analyse op afgeronde evenementen — strategische inzichten per academiejaar.
-            </p>
-          </div>
-        </div>
-
-        {/* ── Divider ─────────────────────────────────────────────────── */}
-        <div className="h-px bg-gradient-to-r from-[#ed6425]/30 via-[#041c3a]/10 to-transparent" />
-
+    <AppLayout
+      title="Data Analyse"
+      subtitle="Analyse op afgeronde evenementen — strategische inzichten per academiejaar"
+    >
+      <>
         {/* ── Filters ─────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Academiejaar</span>
+            <span className="whitespace-nowrap text-xs font-medium text-slate-500">Academiejaar</span>
             {yearsLoading ? (
-              <div className="w-40 h-9 bg-slate-100 animate-pulse rounded-lg" />
+              <div className="h-9 w-40 animate-pulse rounded-lg bg-slate-100" />
             ) : (
               <Select
                 value={selectedYearId ?? ''}
                 onValueChange={(v) => setSelectedYearId(v)}
                 disabled={years.length === 0}
               >
-                <SelectTrigger className="w-44 h-9 text-sm border-slate-200 focus:ring-[#ed6425]">
+                <SelectTrigger className="h-9 w-44 border-slate-200 text-sm focus:ring-[#ed6425]">
                   <SelectValue placeholder="Kies jaar…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,7 +156,7 @@ export default function DataAnalysePage() {
                     <SelectItem key={y.id} value={y.id}>
                       {y.naam}
                       {y.is_huidig && (
-                        <span className="ml-1.5 text-[#ed6425] text-[10px] font-bold">●</span>
+                        <span className="ml-1.5 text-[10px] font-bold text-[#ed6425]">●</span>
                       )}
                     </SelectItem>
                   ))}
@@ -183,7 +165,7 @@ export default function DataAnalysePage() {
             )}
           </div>
 
-        <div className="w-px h-6 bg-slate-200" />
+        <div className="h-6 w-px bg-slate-200" />
 
         <EventTypeFilterTabs
           selected={selectedEventType}
@@ -191,7 +173,7 @@ export default function DataAnalysePage() {
           allEvents={allEvents}
         />
 
-        <div className="w-px h-6 bg-slate-200" />
+        <div className="h-6 w-px bg-slate-200" />
 
         <EventMultiSelectFilter
           events={events}
@@ -202,12 +184,12 @@ export default function DataAnalysePage() {
 
         {/* ── Active year banner ───────────────────────────────────────── */}
         {selectedYear && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#041c3a]">
-            <TrendingUp className="h-4 w-4 text-[#ed6425] shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl bg-[#041c3a] px-4 py-3">
+            <TrendingUp className="h-4 w-4 shrink-0 text-[#ed6425]" />
             <p className="text-sm text-white">
               Analyse voor{' '}
               <strong className="font-semibold text-[#ed6425]">{selectedYear.naam}</strong>
-              <span className="text-slate-300 ml-2">
+              <span className="ml-2 text-slate-300">
                 · {allEvents.length} afgeronde evenementen
                 {selectedEventType !== 'all' && ` · filter: ${selectedEventType}`}
               </span>
@@ -218,18 +200,18 @@ export default function DataAnalysePage() {
         {/* ── Loading ──────────────────────────────────────────────────── */}
         {loading && (
           <div className="flex items-center justify-center py-16 text-slate-400">
-            <Loader2 className="h-5 w-5 animate-spin mr-3 text-[#ed6425]" />
+            <Loader2 className="h-5 w-5 mr-3 animate-spin text-[#ed6425]" />
             <span className="text-sm">Data laden…</span>
           </div>
         )}
 
         {/* ── Error ───────────────────────────────────────────────────── */}
         {error && !loading && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
-            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-700">Fout bij laden</p>
-              <p className="text-xs text-red-500 mt-0.5">{error}</p>
+              <p className="mt-0.5 text-xs text-red-500">{error}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => refetch?.()} className="text-red-600 hover:text-red-700">
               <RefreshCw className="h-4 w-4 mr-1" /> Opnieuw
@@ -494,7 +476,7 @@ export default function DataAnalysePage() {
 
           </div>
         )}
-      </div>
+      </>
     </AppLayout>
   );
 }

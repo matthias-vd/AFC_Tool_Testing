@@ -5,8 +5,9 @@ export default function QRGenerator() {
     <AppLayout
       title="QR Generator"
       subtitle="Genereer QR-codes voor AFC Gent"
+      fullBleed
     >
-      <div className="-mx-8 -my-8 h-[calc(100vh-4rem)] overflow-hidden bg-white">
+      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-white">
         <iframe
           src="https://qr.afcgent.be"
           title="AFC Gent QR Generator"

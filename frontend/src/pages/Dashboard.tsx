@@ -10,12 +10,12 @@ export function Dashboard() {
       title="Dashboard"
       subtitle="Overzicht van alle evenementen en activiteiten"
     >
-      <div className="flex flex-col gap-8">
+      <>
         <AcademicYearBanner />
         <UpcomingReadiness />
         <QuickActions />
         <RecentEvents />
-      </div>
+      </>
     </AppLayout>
   );
 }
