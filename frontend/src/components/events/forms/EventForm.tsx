@@ -12,9 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Save, User, Package, Users, Check, X, Pencil, Archive } from 'lucide-react';
+import { Plus, Trash2, Save, User, Users, Ticket } from 'lucide-react';
 import type { Event, EventFormData, EventType, SprekerRol } from '../../../types/event';
 import { EventRollenManager } from './EventRollenManager';
+import { slugify } from '@/lib/ticketing';
+import { brusselsLocalToIso, isoToBrusselsInput } from '@/lib/datetime';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,6 +135,13 @@ export function EventForm({
   const [startTijd, setStartTijd] = useState(event?.start_tijd ?? '');
   const [eindeTijd, setEindeTijd] = useState(event?.einde_tijd ?? '');
 
+  const [ticketEnabled, setTicketEnabled] = useState(Boolean(event?.ticket_enabled));
+  const [ticketIsOpen, setTicketIsOpen] = useState(Boolean(event?.ticket_is_open));
+  const [ticketSlug, setTicketSlug] = useState(event?.ticket_slug ?? '');
+  const [ticketIntro, setTicketIntro] = useState(event?.ticket_intro ?? '');
+  const [regOpens, setRegOpens] = useState(isoToBrusselsInput(event?.registration_opens_at));
+  const [regCloses, setRegCloses] = useState(isoToBrusselsInput(event?.registration_closes_at));
+
   const [sprekers, setSprekers] = useState<SprekerForm[]>(
     event?.sprekers?.map((s) => ({
       naam: s.naam,
@@ -178,6 +187,12 @@ export function EventForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formValid) return;
+
+    const resolvedSlug =
+      ticketEnabled
+        ? (ticketSlug.trim() || slugify(titel.trim()) || null)
+        : (ticketSlug.trim() || null);
+
     await onSave({
       type,
       titel: titel.trim(),
@@ -190,6 +205,12 @@ export function EventForm({
       start_tijd: startTijd || undefined,
       einde_tijd: eindeTijd || undefined,
       sprekers: sprekers.map((s, i) => ({ ...s, naam: s.naam.trim(), volgorde: i })),
+      ticket_enabled: ticketEnabled,
+      ticket_is_open: ticketEnabled ? ticketIsOpen : false,
+      ticket_slug: ticketEnabled ? resolvedSlug : resolvedSlug,
+      ticket_intro: ticketIntro.trim() || null,
+      registration_opens_at: ticketEnabled ? brusselsLocalToIso(regOpens) : null,
+      registration_closes_at: ticketEnabled ? brusselsLocalToIso(regCloses) : null,
     });
   };
 
@@ -498,6 +519,104 @@ export function EventForm({
           />
         </Section>
       )}
+
+      {/* ── Ticketing (synced with / + /ticketing) ── */}
+      <Section icon={<Ticket className="w-3.5 h-3.5" />} title="Ticketing">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={ticketEnabled}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setTicketEnabled(on);
+              if (on && !ticketSlug.trim() && titel.trim()) {
+                setTicketSlug(slugify(titel.trim()));
+              }
+            }}
+            className="h-4 w-4 rounded border-slate-300 accent-[#ed6425]"
+          />
+          <span className="text-sm font-medium text-[#041c3a]">
+            Publieke inschrijvingen via AFC Ticketing
+          </span>
+        </label>
+        <p className="text-xs text-slate-500 -mt-2 ml-7">
+          Event verschijnt op de publieke pagina{' '}
+          <code className="text-[11px] bg-slate-100 px-1 rounded">/</code> en
+          in het Ticketing-dashboard. Deelnemers landen in dezelfde{' '}
+          <code className="text-[11px] bg-slate-100 px-1 rounded">registrations</code>-tabel.
+        </p>
+
+        {ticketEnabled && (
+          <div className="space-y-4 pt-2 border-t border-slate-100">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={ticketIsOpen}
+                onChange={(e) => setTicketIsOpen(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 accent-[#ed6425]"
+              />
+              <span className="text-sm text-[#041c3a]">Inschrijvingen open</span>
+            </label>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass} htmlFor="ticket-slug">
+                Publieke slug
+              </Label>
+              <Input
+                id="ticket-slug"
+                value={ticketSlug}
+                onChange={(e) => setTicketSlug(slugify(e.target.value) || e.target.value)}
+                placeholder="afc-avond"
+                className={inputClass}
+              />
+              {ticketSlug && (
+                <p className="text-xs text-slate-400">/events/{ticketSlug}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass} htmlFor="ticket-intro">
+                Intro (publieke pagina)
+              </Label>
+              <Textarea
+                id="ticket-intro"
+                value={ticketIntro}
+                onChange={(e) => setTicketIntro(e.target.value)}
+                rows={2}
+                placeholder="Korte tekst op de inschrijfpagina…"
+                className={inputClass}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className={labelClass} htmlFor="reg-opens">
+                  Inschrijving opent
+                </Label>
+                <Input
+                  id="reg-opens"
+                  type="datetime-local"
+                  value={regOpens}
+                  onChange={(e) => setRegOpens(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className={labelClass} htmlFor="reg-closes">
+                  Inschrijving sluit
+                </Label>
+                <Input
+                  id="reg-closes"
+                  type="datetime-local"
+                  value={regCloses}
+                  onChange={(e) => setRegCloses(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </Section>
 
       {/* Actions */}
       <div className="flex gap-3 justify-end pt-2 pb-4">

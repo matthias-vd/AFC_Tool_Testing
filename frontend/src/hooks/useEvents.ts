@@ -145,6 +145,12 @@ export function useEventMutations() {
         ...(eventData.deuren_open && { deuren_open: eventData.deuren_open }),
         ...(eventData.start_tijd && { start_tijd: eventData.start_tijd }),
         ...(eventData.einde_tijd && { einde_tijd: eventData.einde_tijd }),
+        ticket_enabled: eventData.ticket_enabled ?? false,
+        ticket_is_open: eventData.ticket_is_open ?? false,
+        ticket_slug: eventData.ticket_slug ?? null,
+        ticket_intro: eventData.ticket_intro ?? null,
+        registration_opens_at: eventData.registration_opens_at ?? null,
+        registration_closes_at: eventData.registration_closes_at ?? null,
       };
 
       const { data: event, error: eventError } = await supabase

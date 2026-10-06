@@ -5,6 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* afcgent-tickettool public palette (non-conflicting names) */
+  --color-paper: #f0f2f5;
+  --color-ink: #081c3c;
+  --color-line: #d8dee8;
+  --color-forest: #081c3c;
+  --color-navy-hover: #071833;
+  --color-ok: #1f7a4d;
+  --color-warn: #c9561f;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -121,5 +130,77 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ── Public ticketing shell (afcgent-tickettool layout) ───────────────────── */
+.ticket-public {
+  --muted: #5c6b80;
+  --accent: #ec6525;
+  --card: #ffffff;
+  --color-muted: #5c6b80;
+  --color-accent: #ec6525;
+  --color-card: #ffffff;
+  min-height: 100vh;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: "Josefin Sans", sans-serif;
+}
+
+.ticket-public .serif {
+  font-family: "Josefin Sans", sans-serif;
+  font-weight: 700;
+}
+
+.ticket-public .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ticket-public .field label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.ticket-public .field input,
+.ticket-public .field textarea,
+.ticket-public .field select {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  background: #ffffff;
+  color: var(--color-ink);
+  border-radius: 0.85rem;
+  padding: 0.8rem 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font: inherit;
+}
+
+.ticket-public .field input:focus,
+.ticket-public .field textarea:focus,
+.ticket-public .field select:focus {
+  border-color: #ec6525;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #ec6525 22%, transparent);
+}
+
+.ticket-public .ticket-card {
+  background:
+    radial-gradient(circle at left center, var(--color-paper) 10px, transparent 10.5px),
+    radial-gradient(circle at right center, var(--color-paper) 10px, transparent 10.5px),
+    var(--color-card);
+  border: 1px solid var(--color-line);
+}
+
+@media print {
+  .ticket-public header,
+  .ticket-public footer,
+  .ticket-public .no-print {
+    display: none !important;
+  }
+
+  .ticket-public .ticket-card {
+    box-shadow: none;
+    break-inside: avoid;
   }
 }

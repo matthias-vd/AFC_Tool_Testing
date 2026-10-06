@@ -4,7 +4,7 @@ export type EventStatus = 'concept' | 'voorbereid' | 'afgerond' | 'compleet';
 
 export type SprekerRol = 'spreker' | 'moderator' | 'panellid';
 
-export type RegistratieBron = 'tally' | 'tickettailor' | 'manueel';
+export type RegistratieBron = 'tally' | 'tickettailor' | 'ticket_tailor' | 'manueel' | 'afc_ticket';
 
 export interface AcademicYear {
   id: string;
@@ -48,7 +48,26 @@ export interface Registration {
   ingeschreven_op?: string;
   checked_in: boolean;
   registered_at: string;
+  /** Ticketing fields (bron = afc_ticket) */
+  phone?: string | null;
+  extra_info?: string | null;
+  food_preference?: string | null;
+  cv_original_name?: string | null;
+  cv_path?: string | null;
+  ticket_token?: string | null;
+  ticket_code?: string | null;
+  checked_in_at?: string | null;
+  cancelled_at?: string | null;
 }
+
+/** Registration row from AFC public ticketing */
+export type TicketRegistration = Registration & {
+  bron: 'afc_ticket';
+  naam: string;
+  phone: string;
+  food_preference: string;
+  ticket_token: string;
+};
 
 export interface Feedback {
   id: string;
@@ -82,6 +101,14 @@ export interface Event {
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
+  /** Public ticketing (synced with /inschrijven) */
+  ticket_enabled?: boolean;
+  ticket_slug?: string | null;
+  ticket_intro?: string | null;
+  ticket_is_open?: boolean;
+  registration_opens_at?: string | null;
+  registration_closes_at?: string | null;
+  ticket_image_path?: string | null;
   // Relations
   sprekers?: Spreker[];
   registraties?: Registration[];
@@ -131,6 +158,12 @@ export interface EventFormData {
   einde_tijd?: string;
   sprekers?: Omit<Spreker, 'id' | 'event_id' | 'created_at'>[];
   domain_ids?: string[];
+  ticket_enabled?: boolean;
+  ticket_slug?: string | null;
+  ticket_intro?: string | null;
+  ticket_is_open?: boolean;
+  registration_opens_at?: string | null;
+  registration_closes_at?: string | null;
 }
 
 export interface TallyRegistration {

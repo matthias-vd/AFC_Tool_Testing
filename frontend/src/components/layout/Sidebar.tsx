@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Zap,
   Trash2,
+  Ticket,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,11 @@ const navItems = [
     label: 'Academiejaren',
     href: '/academiejaren',
     icon: GraduationCap,
+  },
+  {
+    label: 'Ticketing',
+    href: '/ticketing',
+    icon: Ticket,
   },
   {
     label: 'Prullenbak',
