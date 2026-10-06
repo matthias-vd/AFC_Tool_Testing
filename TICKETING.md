@@ -11,6 +11,9 @@ Publieke inschrijvingen schrijven naar dezelfde `registrations`-tabel met `bron 
 4. Controleer dat storage-buckets `ticket-cvs` en `ticket-images` bestaan.
 5. Als CV-upload faalt op RLS: voer ook
    [`supabase/migrations/002_ticket_cvs_storage_rls.sql`](supabase/migrations/002_ticket_cvs_storage_rls.sql) uit.
+6. Als inschrijven klaagt over `ingeschreven_op`/text: voer
+   [`supabase/migrations/003_fix_register_afc_ticket_types.sql`](supabase/migrations/003_fix_register_afc_ticket_types.sql) uit
+   (frontend heeft ondertussen een fallback-insert).
 
 Als je een check-constraint op `registrations.bron` hebt, voeg `'afc_ticket'` toe (zie commentaar in de migratie).
 
