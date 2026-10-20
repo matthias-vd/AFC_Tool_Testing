@@ -151,6 +151,8 @@ export function useEventMutations() {
         ticket_intro: eventData.ticket_intro ?? null,
         registration_opens_at: eventData.registration_opens_at ?? null,
         registration_closes_at: eventData.registration_closes_at ?? null,
+        cv_required: eventData.cv_required ?? true,
+        waitlist_enabled: eventData.waitlist_enabled ?? false,
       };
 
       const { data: event, error: eventError } = await supabase

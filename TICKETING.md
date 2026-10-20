@@ -17,22 +17,32 @@ Dat voegt o.a. toe: ticketing-velden op `events`/`registrations`, zet `ingeschre
 1. [`000_add_afc_ticket_bron.sql`](supabase/migrations/000_add_afc_ticket_bron.sql)
 2. [`001_ticketing.sql`](supabase/migrations/001_ticketing.sql)
 3. Eventueel [`002_ticket_cvs_storage_rls.sql`](supabase/migrations/002_ticket_cvs_storage_rls.sql) / [`003_fix_register_afc_ticket_types.sql`](supabase/migrations/003_fix_register_afc_ticket_types.sql)
+4. [`004_cv_required_waitlist.sql`](supabase/migrations/004_cv_required_waitlist.sql) — CV-toggle + wachtlijst + promote RPC
 
 Als je een check-constraint op `registrations.bron` hebt, voeg `'afc_ticket'` toe (zie commentaar in de migratie).
+
+## SMTP (bulkmail)
+
+Zet in Vercel / `.env` (zie [`frontend/.env.example`](frontend/.env.example)):
+
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` (of de `VITE_`-varianten) voor de `/api/mail` serverless functie
+
+Lokaal testen van mail: `vercel dev` (Vite alleen serveert geen `/api`).
 
 ## Gebruik
 
 1. **Evenementen** → event openen → sectie **Ticketing** → aanzetten, slug + open zetten.
-2. Publiek (zelfde layout als afcgent-tickettool): `/`
-3. Header **Organisatie** → `/ticketing` (AFC EventBeheer; login indien nodig).
-4. Intern: sidebar **Ticketing** → overzicht, scanner, deelnemers/CSV. Dashboard blijft op `/dashboard`.
+   Optioneel: **CV-upload verplicht**, **Wachtlijst bij volzet**.
+2. Publiek: `/` → `/events/:slug` (CV alleen als verplicht; wachtlijst als vol + toggle aan).
+3. Intern: sidebar **Ticketing** → open/dicht, CV/wachtlijst toggles, **Bulkmail** / wachtlijst-mail, deelnemers (filter + promoveren).
 
 | Publieke route | Functie |
 |---|---|
 | `/` | Eventlijst (home) |
-| `/events/:slug` | Inschrijven + CV |
+| `/events/:slug` | Inschrijven (+ optioneel CV / wachtlijst) |
 | `/afgelopen` | Archief |
-| `/ticket/:slug/:token` | QR-ticket |
+| `/ticket/:slug/:token` | QR-ticket of wachtlijst-bevestiging |
 | `/uitschrijven/:token` | Annuleren |
 
 ## Harmonie

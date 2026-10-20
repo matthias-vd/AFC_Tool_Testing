@@ -93,7 +93,7 @@ export function Sidebar() {
             AFC
           </span>
           <span className="text-[10px] text-white/40 tracking-widest uppercase leading-tight mt-0.5">
-            Fork - STAGING 
+            Fork - STAGING
           </span>
         </div>
       </div>

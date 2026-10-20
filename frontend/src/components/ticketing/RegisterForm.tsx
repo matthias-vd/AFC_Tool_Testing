@@ -5,7 +5,16 @@ import { FOOD_OPTIONS } from '@/lib/food';
 import { registerForEvent } from '@/hooks/useTicketing';
 import { ticketViewPath } from '@/lib/ticketing';
 
-export function RegisterForm({ eventSlug }: { eventSlug: string }) {
+export function RegisterForm({
+  eventSlug,
+  cvRequired = true,
+  waitlistMode = false,
+}: {
+  eventSlug: string;
+  cvRequired?: boolean;
+  /** When true, submit joins the waitlist (event is sold out). */
+  waitlistMode?: boolean;
+}) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -23,7 +32,7 @@ export function RegisterForm({ eventSlug }: { eventSlug: string }) {
     const cvFile = data.get('cv') as File | null;
 
     try {
-      if (!cvFile?.size) throw new Error('Upload een CV als PDF.');
+      if (cvRequired && !cvFile?.size) throw new Error('Upload een CV als PDF.');
       const result = await registerForEvent({
         eventSlug,
         name: String(data.get('name') ?? ''),
@@ -31,9 +40,14 @@ export function RegisterForm({ eventSlug }: { eventSlug: string }) {
         phone: String(data.get('phone') ?? ''),
         foodPreference: String(data.get('foodPreference') ?? ''),
         extraInfo: String(data.get('extraInfo') ?? ''),
-        cvFile,
+        cvFile: cvFile?.size ? cvFile : null,
+        allowWaitlist: waitlistMode,
       });
-      const params = new URLSearchParams({ nieuw: '1', mail: '0' });
+      const params = new URLSearchParams({
+        nieuw: '1',
+        mail: '0',
+        ...(result.waitlisted ? { waitlist: '1' } : {}),
+      });
       navigate(
         `${ticketViewPath(result.eventSlug, result.token)}?${params.toString()}`,
       );
@@ -47,6 +61,13 @@ export function RegisterForm({ eventSlug }: { eventSlug: string }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-5">
       <input type="hidden" name="eventSlug" value={eventSlug} />
+      {waitlistMode ? (
+        <p className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
+          Dit event is volzet. Door dit formulier in te dienen kom je op de{' '}
+          <strong>wachtlijst</strong>. Je ontvangt geen bevestigd ticket tot je
+          gepromoveerd wordt.
+        </p>
+      ) : null}
       <div className="field">
         <label htmlFor="name">Naam</label>
         <input id="name" name="name" autoComplete="name" required maxLength={120} />
@@ -99,20 +120,22 @@ export function RegisterForm({ eventSlug }: { eventSlug: string }) {
           }
         />
       </div>
-      <div className="field">
-        <label htmlFor="cv">CV (PDF)</label>
-        <input
-          id="cv"
-          name="cv"
-          type="file"
-          accept="application/pdf,.pdf"
-          required
-          onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
-        />
-        <p className="text-sm text-muted">
-          {fileName ? fileName : 'Maximaal 15 MB, alleen PDF.'}
-        </p>
-      </div>
+      {cvRequired ? (
+        <div className="field">
+          <label htmlFor="cv">CV (PDF)</label>
+          <input
+            id="cv"
+            name="cv"
+            type="file"
+            accept="application/pdf,.pdf"
+            required
+            onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
+          />
+          <p className="text-sm text-muted">
+            {fileName ? fileName : 'Maximaal 15 MB, alleen PDF.'}
+          </p>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
@@ -125,7 +148,13 @@ export function RegisterForm({ eventSlug }: { eventSlug: string }) {
         disabled={pending}
         className="rounded-full bg-forest px-5 py-3.5 text-card font-semibold transition hover:bg-navy-hover disabled:opacity-60"
       >
-        {pending ? 'Bezig met inschrijven…' : 'Schrijf me in'}
+        {pending
+          ? waitlistMode
+            ? 'Bezig met wachtlijst…'
+            : 'Bezig met inschrijven…'
+          : waitlistMode
+            ? 'Zet me op de wachtlijst'
+            : 'Schrijf me in'}
       </button>
     </form>
   );

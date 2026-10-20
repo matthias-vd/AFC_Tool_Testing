@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Download, FileText, Loader2, Trash2 } from 'lucide-react';
+import { ArrowUpRight, Download, FileText, Loader2, Trash2 } from 'lucide-react';
 import { foodLabel } from '@/lib/food';
 import { formatDateTime } from '@/lib/datetime';
 import {
   deleteTicketRegistration,
   getCvSignedUrl,
+  promoteWaitlistRegistration,
   setCheckIn,
 } from '@/hooks/useTicketing';
 import type { Event, TicketRegistration } from '@/types/event';
@@ -13,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { downloadCsv, registrationsToCsv } from '@/lib/ticketCsv';
 import { toast } from 'sonner';
+
+type StatusFilter = 'all' | 'confirmed' | 'waitlist' | 'cancelled';
 
 export function AttendeeTable({
   events,
@@ -26,6 +29,7 @@ export function AttendeeTable({
   onChange: () => void;
 }) {
   const [eventFilter, setEventFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [query, setQuery] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -38,6 +42,9 @@ export function AttendeeTable({
     const q = query.trim().toLowerCase();
     return registrations.filter((r) => {
       if (eventFilter !== 'all' && r.event_id !== eventFilter) return false;
+      if (statusFilter === 'confirmed' && (r.cancelled_at || r.is_waitlisted)) return false;
+      if (statusFilter === 'waitlist' && (r.cancelled_at || !r.is_waitlisted)) return false;
+      if (statusFilter === 'cancelled' && !r.cancelled_at) return false;
       if (!q) return true;
       return (
         (r.naam ?? '').toLowerCase().includes(q) ||
@@ -45,9 +52,13 @@ export function AttendeeTable({
         (r.phone ?? '').toLowerCase().includes(q)
       );
     });
-  }, [registrations, eventFilter, query]);
+  }, [registrations, eventFilter, statusFilter, query]);
 
   async function toggleCheckIn(reg: TicketRegistration) {
+    if (reg.is_waitlisted) {
+      toast.error('Wachtlijst-inschrijvingen kunnen niet inchecken.');
+      return;
+    }
     setBusyId(reg.id);
     try {
       const next = !(reg.checked_in || reg.checked_in_at);
@@ -55,6 +66,20 @@ export function AttendeeTable({
       onChange();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Check-in mislukt');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handlePromote(reg: TicketRegistration) {
+    if (!confirm(`Promoveer ${reg.naam} van wachtlijst naar bevestigd ticket?`)) return;
+    setBusyId(reg.id);
+    try {
+      await promoteWaitlistRegistration(reg.id);
+      toast.success('Gepromoveerd van wachtlijst');
+      onChange();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Promoveren mislukt');
     } finally {
       setBusyId(null);
     }
@@ -112,6 +137,21 @@ export function AttendeeTable({
             ))}
           </select>
         </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Status
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="flex h-9 min-w-[160px] rounded-md border border-slate-200 bg-white px-3 text-sm"
+          >
+            <option value="all">Alles</option>
+            <option value="confirmed">Ingeschreven</option>
+            <option value="waitlist">Wachtlijst</option>
+            <option value="cancelled">Uitgeschreven</option>
+          </select>
+        </div>
         <div className="space-y-1 flex-1 min-w-[180px]">
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Zoeken
@@ -154,6 +194,7 @@ export function AttendeeTable({
               {filtered.map((reg) => {
                 const checked = Boolean(reg.checked_in || reg.checked_in_at);
                 const cancelled = Boolean(reg.cancelled_at);
+                const waitlisted = Boolean(reg.is_waitlisted) && !cancelled;
                 return (
                   <tr key={reg.id} className="border-b border-slate-50 hover:bg-slate-50/50">
                     <td className="px-4 py-3">
@@ -172,6 +213,8 @@ export function AttendeeTable({
                         <Badge variant="outline" className="border-red-200 text-red-600">
                           Uitgeschreven
                         </Badge>
+                      ) : waitlisted ? (
+                        <Badge className="border-0 bg-[#ed6425] text-white">Wachtlijst</Badge>
                       ) : checked ? (
                         <Badge className="bg-emerald-500 text-white border-0">Aanwezig</Badge>
                       ) : (
@@ -196,7 +239,21 @@ export function AttendeeTable({
                             <FileText className="h-4 w-4" />
                           </Button>
                         )}
-                        {!cancelled && (
+                        {waitlisted && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={busyId === reg.id}
+                            onClick={() => handlePromote(reg)}
+                            className="text-xs"
+                            title="Promoveer naar ticket"
+                          >
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                            Promoveer
+                          </Button>
+                        )}
+                        {!cancelled && !waitlisted && (
                           <Button
                             type="button"
                             size="sm"

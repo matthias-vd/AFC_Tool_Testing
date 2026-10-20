@@ -141,6 +141,8 @@ export function EventForm({
   const [ticketIntro, setTicketIntro] = useState(event?.ticket_intro ?? '');
   const [regOpens, setRegOpens] = useState(isoToBrusselsInput(event?.registration_opens_at));
   const [regCloses, setRegCloses] = useState(isoToBrusselsInput(event?.registration_closes_at));
+  const [cvRequired, setCvRequired] = useState(event?.cv_required !== false);
+  const [waitlistEnabled, setWaitlistEnabled] = useState(Boolean(event?.waitlist_enabled));
 
   const [sprekers, setSprekers] = useState<SprekerForm[]>(
     event?.sprekers?.map((s) => ({
@@ -211,6 +213,8 @@ export function EventForm({
       ticket_intro: ticketIntro.trim() || null,
       registration_opens_at: ticketEnabled ? brusselsLocalToIso(regOpens) : null,
       registration_closes_at: ticketEnabled ? brusselsLocalToIso(regCloses) : null,
+      cv_required: ticketEnabled ? cvRequired : false,
+      waitlist_enabled: ticketEnabled ? waitlistEnabled : false,
     });
   };
 
@@ -557,6 +561,34 @@ export function EventForm({
               />
               <span className="text-sm text-[#041c3a]">Inschrijvingen open</span>
             </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={cvRequired}
+                onChange={(e) => setCvRequired(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 accent-[#ed6425]"
+              />
+              <span className="text-sm text-[#041c3a]">CV-upload verplicht</span>
+            </label>
+            <p className="text-xs text-slate-500 -mt-2 ml-7">
+              Uitvinken verbergt het CV-veld op de publieke inschrijfpagina.
+            </p>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={waitlistEnabled}
+                onChange={(e) => setWaitlistEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 accent-[#ed6425]"
+              />
+              <span className="text-sm text-[#041c3a]">Wachtlijst bij volzet</span>
+            </label>
+            <p className="text-xs text-slate-500 -mt-2 ml-7">
+              Als <code className="text-[11px] bg-slate-100 px-1 rounded">max. deelnemers</code>{' '}
+              bereikt is, kunnen mensen zich nog op de wachtlijst zetten. Promoveren doe je
+              manueel in Ticketing.
+            </p>
 
             <div className="space-y-1.5">
               <Label className={labelClass} htmlFor="ticket-slug">

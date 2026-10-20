@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { PublicLayout } from '@/components/ticketing/PublicLayout';
 import { RegisterForm } from '@/components/ticketing/RegisterForm';
-import { fetchEventBySlug } from '@/hooks/useTicketing';
+import {
+  fetchEventBySlug,
+  fetchEventTicketStatus,
+  type EventTicketStatus,
+} from '@/hooks/useTicketing';
 import { formatEventDate } from '@/lib/datetime';
 import { isEventAcceptingRegistrations, ticketHomePath } from '@/lib/ticketing';
 import type { Event } from '@/types/event';
@@ -17,6 +21,7 @@ function imageUrl(path: string | null | undefined) {
 export default function PublicEventDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [event, setEvent] = useState<Event | null>(null);
+  const [status, setStatus] = useState<EventTicketStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +30,12 @@ export default function PublicEventDetailPage() {
     (async () => {
       setLoading(true);
       try {
-        const data = await fetchEventBySlug(slug);
+        const [data, ticketStatus] = await Promise.all([
+          fetchEventBySlug(slug),
+          fetchEventTicketStatus(slug).catch(() => null),
+        ]);
         setEvent(data);
+        setStatus(ticketStatus);
         if (!data) setError('Event niet gevonden.');
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Laden mislukt');
@@ -64,6 +73,11 @@ export default function PublicEventDetailPage() {
   }
 
   const open = isEventAcceptingRegistrations(event);
+  const soldOut = Boolean(status?.soldOut);
+  const waitlistEnabled = Boolean(status?.waitlistEnabled ?? event.waitlist_enabled);
+  const cvRequired = status?.cvRequired ?? event.cv_required !== false;
+  const canRegister = open && (!soldOut || waitlistEnabled);
+  const waitlistMode = open && soldOut && waitlistEnabled;
   const description = (event.beschrijving_website ?? '').trim();
   const img = imageUrl(event.ticket_image_path);
   const when = event.event_datum
@@ -71,6 +85,14 @@ export default function PublicEventDetailPage() {
       ? `${event.event_datum}T${event.start_tijd}`
       : event.event_datum
     : null;
+
+  const statusLabel = !open
+    ? 'Inschrijving gesloten'
+    : waitlistMode
+      ? 'Wachtlijst open'
+      : soldOut
+        ? 'Volzet'
+        : 'Live inschrijving';
 
   return (
     <PublicLayout>
@@ -83,9 +105,7 @@ export default function PublicEventDetailPage() {
               className="mb-8 h-56 w-full rounded-[28px] object-cover"
             />
           ) : null}
-          <p className="text-sm tracking-[0.18em] uppercase text-accent">
-            {open ? 'Live inschrijving' : 'Inschrijving gesloten'}
-          </p>
+          <p className="text-sm tracking-[0.18em] uppercase text-accent">{statusLabel}</p>
           <h1 className="serif mt-4 text-5xl leading-[1.05] sm:text-6xl">
             {event.titel}
           </h1>
@@ -110,6 +130,17 @@ export default function PublicEventDetailPage() {
                 <dd className="mt-1 text-base">{event.locatie}</dd>
               </div>
             ) : null}
+            {status?.maxDeelnemers != null ? (
+              <div>
+                <dt className="text-muted">Plaatsen</dt>
+                <dd className="mt-1 text-base">
+                  {status.confirmedCount} / {status.maxDeelnemers} bevestigd
+                  {status.waitlistCount > 0
+                    ? ` · ${status.waitlistCount} op wachtlijst`
+                    : ''}
+                </dd>
+              </div>
+            ) : null}
             {(event.registration_opens_at || event.registration_closes_at) && (
               <div>
                 <dt className="text-muted">Inschrijfperiode</dt>
@@ -132,20 +163,31 @@ export default function PublicEventDetailPage() {
           </p>
         </section>
         <section className="rounded-[28px] border border-line bg-card p-6 sm:p-8">
-          {open && event.ticket_slug ? (
+          {canRegister && event.ticket_slug ? (
             <>
-              <h2 className="serif text-3xl">Je gegevens</h2>
+              <h2 className="serif text-3xl">
+                {waitlistMode ? 'Wachtlijst' : 'Je gegevens'}
+              </h2>
               <p className="mt-2 mb-8 text-sm text-muted">
-                Alle velden zijn verplicht, behalve extra info (tenzij je “Andere” kiest bij
-                eten).
+                {cvRequired
+                  ? 'Alle velden zijn verplicht, behalve extra info (tenzij je “Andere” kiest bij eten).'
+                  : 'Alle velden zijn verplicht, behalve extra info (tenzij je “Andere” kiest bij eten). Geen CV nodig.'}
               </p>
-              <RegisterForm eventSlug={event.ticket_slug} />
+              <RegisterForm
+                eventSlug={event.ticket_slug}
+                cvRequired={cvRequired}
+                waitlistMode={waitlistMode}
+              />
             </>
           ) : (
             <>
-              <h2 className="serif text-3xl">Niet beschikbaar</h2>
+              <h2 className="serif text-3xl">
+                {soldOut && open ? 'Volzet' : 'Niet beschikbaar'}
+              </h2>
               <p className="mt-4 text-muted">
-                Inschrijven voor dit event is momenteel niet mogelijk.
+                {soldOut && open
+                  ? 'Dit event is volzet en er is geen wachtlijst geopend.'
+                  : 'Inschrijven voor dit event is momenteel niet mogelijk.'}
               </p>
               <Link
                 to="/afgelopen"

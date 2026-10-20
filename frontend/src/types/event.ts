@@ -58,6 +58,8 @@ export interface Registration {
   ticket_code?: string | null;
   checked_in_at?: string | null;
   cancelled_at?: string | null;
+  /** True when registered via waitlist (no confirmed seat yet). */
+  is_waitlisted?: boolean | null;
 }
 
 /** Registration row from AFC public ticketing */
@@ -109,6 +111,10 @@ export interface Event {
   registration_opens_at?: string | null;
   registration_closes_at?: string | null;
   ticket_image_path?: string | null;
+  /** When true, public registration requires a CV PDF upload. */
+  cv_required?: boolean;
+  /** When true and capacity is full, new signups join the waitlist. */
+  waitlist_enabled?: boolean;
   // Relations
   sprekers?: Spreker[];
   registraties?: Registration[];
@@ -164,6 +170,8 @@ export interface EventFormData {
   ticket_is_open?: boolean;
   registration_opens_at?: string | null;
   registration_closes_at?: string | null;
+  cv_required?: boolean;
+  waitlist_enabled?: boolean;
 }
 
 export interface TallyRegistration {

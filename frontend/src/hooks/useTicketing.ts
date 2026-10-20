@@ -153,12 +153,37 @@ export type RegisterInput = {
   phone: string;
   foodPreference: string;
   extraInfo: string;
-  cvFile: File;
+  cvFile?: File | null;
+  /** When true, allow signup onto waitlist if sold out (server still enforces). */
+  allowWaitlist?: boolean;
 };
+
+export type EventTicketStatus = {
+  eventId: string;
+  slug: string;
+  cvRequired: boolean;
+  waitlistEnabled: boolean;
+  maxDeelnemers: number | null;
+  confirmedCount: number;
+  waitlistCount: number;
+  soldOut: boolean;
+  ticketIsOpen: boolean;
+};
+
+export async function fetchEventTicketStatus(
+  slug: string,
+): Promise<EventTicketStatus | null> {
+  const { data, error } = await supabase.rpc('get_event_ticket_status', {
+    p_event_slug: slug,
+  });
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return data as EventTicketStatus;
+}
 
 export async function registerForEvent(
   input: RegisterInput,
-): Promise<{ token: string; eventSlug: string }> {
+): Promise<{ token: string; eventSlug: string; waitlisted: boolean }> {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   const phone = input.phone.trim();
@@ -176,27 +201,54 @@ export async function registerForEvent(
   if (foodPreference === 'andere' && extraInfo.length < 2) {
     throw new Error('Vul bij Extra info toe wat je bedoelt met ‘Andere’.');
   }
-  if (!input.cvFile || input.cvFile.type !== 'application/pdf') {
-    throw new Error('Upload een CV als PDF.');
-  }
-  if (input.cvFile.size > MAX_CV_BYTES) {
-    throw new Error('CV mag maximaal 15 MB zijn.');
-  }
 
   const event = await fetchEventBySlug(input.eventSlug);
   if (!event || !isEventAcceptingRegistrations(event)) {
     throw new Error('Inschrijvingen voor dit event zijn gesloten.');
   }
 
+  const status = await fetchEventTicketStatus(input.eventSlug);
+  const cvRequired = status?.cvRequired ?? event.cv_required ?? true;
+  const soldOut = status?.soldOut ?? false;
+  const waitlistEnabled = status?.waitlistEnabled ?? event.waitlist_enabled ?? false;
+
+  if (soldOut && !waitlistEnabled) {
+    throw new Error('Dit event is volzet.');
+  }
+  if (soldOut && waitlistEnabled && !input.allowWaitlist) {
+    throw new Error('Dit event is volzet. Je kunt je op de wachtlijst zetten.');
+  }
+
+  if (cvRequired) {
+    if (!input.cvFile || input.cvFile.type !== 'application/pdf') {
+      throw new Error('Upload een CV als PDF.');
+    }
+    if (input.cvFile.size > MAX_CV_BYTES) {
+      throw new Error('CV mag maximaal 15 MB zijn.');
+    }
+  } else if (input.cvFile?.size) {
+    if (input.cvFile.type !== 'application/pdf') {
+      throw new Error('CV moet een PDF zijn.');
+    }
+    if (input.cvFile.size > MAX_CV_BYTES) {
+      throw new Error('CV mag maximaal 15 MB zijn.');
+    }
+  }
+
   const token = mintTicketToken();
   const registrationId = crypto.randomUUID();
-  const cvPath = `${event.id}/${registrationId}.pdf`;
+  let cvPath: string | null = null;
+  let cvOriginalName: string | null = null;
 
-  const { error: uploadError } = await supabase.storage
-    .from(CV_BUCKET)
-    .upload(cvPath, input.cvFile, { contentType: 'application/pdf', upsert: true });
-  if (uploadError) {
-    throw new Error('CV uploaden mislukt: ' + uploadError.message);
+  if (input.cvFile?.size) {
+    cvPath = `${event.id}/${registrationId}.pdf`;
+    cvOriginalName = input.cvFile.name;
+    const { error: uploadError } = await supabase.storage
+      .from(CV_BUCKET)
+      .upload(cvPath, input.cvFile, { contentType: 'application/pdf', upsert: true });
+    if (uploadError) {
+      throw new Error('CV uploaden mislukt: ' + uploadError.message);
+    }
   }
 
   const { data, error } = await supabase.rpc('register_afc_ticket', {
@@ -206,68 +258,35 @@ export async function registerForEvent(
     p_phone: phone,
     p_food_preference: foodPreference,
     p_extra_info: extraInfo,
-    p_cv_original_name: input.cvFile.name,
+    p_cv_original_name: cvOriginalName,
     p_cv_path: cvPath,
     p_ticket_token: token,
   });
 
   if (!error && data) {
-    const result = data as { token: string; eventSlug: string };
-    return { token: result.token, eventSlug: result.eventSlug };
+    const result = data as { token: string; eventSlug: string; waitlisted?: boolean };
+    return {
+      token: result.token,
+      eventSlug: result.eventSlug,
+      waitlisted: Boolean(result.waitlisted),
+    };
   }
 
+  if (cvPath) {
+    await supabase.storage.from(CV_BUCKET).remove([cvPath]);
+  }
   const rpcMessage = error?.message ?? '';
-  const rpcNeedsFallback = /timestamp|type text|ingeschreven_op|rewrite or cast/i.test(
-    rpcMessage,
+  throw new Error(
+    rpcMessage.replace(/^.*ERROR:\s*/i, '').split('\n')[0] || 'Inschrijven mislukt.',
   );
+}
 
-  // Fallback when DB function still has the old text cast (run 003_fix_*.sql to fix).
-  if (!rpcNeedsFallback) {
-    await supabase.storage.from(CV_BUCKET).remove([cvPath]);
-    throw new Error(
-      rpcMessage.replace(/^.*ERROR:\s*/i, '').split('\n')[0] || 'Inschrijven mislukt.',
-    );
-  }
-
-  const now = new Date().toISOString();
-  // Prefer registered_at only; some DBs still reject text→timestamptz on ingeschreven_op.
-  const baseRow = {
-    id: registrationId,
-    event_id: event.id,
-    bron: 'afc_ticket' as const,
-    email,
-    naam: name,
-    phone,
-    extra_info: extraInfo,
-    food_preference: foodPreference,
-    cv_original_name: input.cvFile.name,
-    cv_path: cvPath,
-    ticket_token: token,
-    ticket_code: token.slice(0, 12),
-    checked_in: false,
-    checked_in_at: null,
-    cancelled_at: null,
-    registered_at: now,
-  };
-
-  let { error: insertError } = await supabase.from('registrations').insert({
-    ...baseRow,
-    ingeschreven_op: now,
+export async function promoteWaitlistRegistration(registrationId: string) {
+  const { data, error } = await supabase.rpc('promote_waitlist_registration', {
+    p_registration_id: registrationId,
   });
-
-  if (insertError && /ingeschreven_op|timestamp|type text/i.test(insertError.message)) {
-    ({ error: insertError } = await supabase.from('registrations').insert(baseRow));
-  }
-
-  if (insertError) {
-    await supabase.storage.from(CV_BUCKET).remove([cvPath]);
-    if (/duplicate|unique/i.test(insertError.message)) {
-      throw new Error('Dit e-mailadres is al ingeschreven voor dit event.');
-    }
-    throw new Error(insertError.message);
-  }
-
-  return { token, eventSlug: event.ticket_slug! };
+  if (error) throw new Error(error.message);
+  return data as { id: string; email: string; naam: string; promoted: boolean };
 }
 
 export async function cancelRegistration(token: string): Promise<void> {
@@ -360,6 +379,9 @@ export async function checkInByPayload(opts: {
   if (registration.cancelled_at) {
     throw new Error('Deze inschrijving is geannuleerd.');
   }
+  if (registration.is_waitlisted) {
+    throw new Error('Deze persoon staat op de wachtlijst (geen geldig ticket).');
+  }
 
   if (registration.checked_in_at || registration.checked_in) {
     return {
@@ -429,6 +451,8 @@ export async function updateEventTicketing(
       | 'registration_opens_at'
       | 'registration_closes_at'
       | 'ticket_image_path'
+      | 'cv_required'
+      | 'waitlist_enabled'
     >
   >,
 ) {
@@ -443,11 +467,14 @@ export function computeTicketStats(registrations: TicketRegistration[]): {
   total: number;
   checkedIn: number;
   cancelled: number;
+  waitlisted: number;
 } {
   const active = registrations.filter((r) => !r.cancelled_at);
+  const confirmed = active.filter((r) => !r.is_waitlisted);
   return {
-    total: active.length,
-    checkedIn: active.filter((r) => r.checked_in || r.checked_in_at).length,
+    total: confirmed.length,
+    checkedIn: confirmed.filter((r) => r.checked_in || r.checked_in_at).length,
     cancelled: registrations.filter((r) => r.cancelled_at).length,
+    waitlisted: active.filter((r) => r.is_waitlisted).length,
   };
 }

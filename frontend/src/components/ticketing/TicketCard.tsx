@@ -19,23 +19,26 @@ export function TicketCard({
   emailSent?: boolean | null;
 }) {
   const cancelled = Boolean(registration.cancelled_at);
+  const waitlisted = Boolean(registration.is_waitlisted) && !cancelled;
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (cancelled || !registration.ticket_token) return;
+    if (cancelled || waitlisted || !registration.ticket_token) return;
     const url = ticketAbsoluteUrl(eventSlug, registration.ticket_token);
     QRCode.toDataURL(url, {
       width: 440,
       margin: 1,
       color: { dark: '#081c3c', light: '#ffffff' },
     }).then(setQrDataUrl);
-  }, [cancelled, eventSlug, registration.ticket_token]);
+  }, [cancelled, waitlisted, eventSlug, registration.ticket_token]);
 
   return (
     <article className="ticket-card mx-auto w-full max-w-xl overflow-hidden rounded-[28px]">
       <div className="flex flex-col gap-8 p-7 sm:p-10">
         {cancelled ? (
           <p className="text-sm tracking-[0.18em] uppercase text-accent">Uitgeschreven</p>
+        ) : waitlisted ? (
+          <p className="text-sm tracking-[0.18em] uppercase text-accent">Wachtlijst</p>
         ) : isNew ? (
           <p className="no-print text-sm tracking-[0.18em] uppercase text-ok">
             Inschrijving bevestigd
@@ -50,6 +53,18 @@ export function TicketCard({
           <p className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
             Deze inschrijving is geannuleerd. Het ticket is niet meer geldig voor check-in.
           </p>
+        ) : waitlisted ? (
+          <div className="space-y-4">
+            <p className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
+              Je staat op de wachtlijst. Zodra er een plaats vrijkomt en je gepromoveerd
+              wordt, ontvang je een bevestigd ticket.
+            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted">Gast</p>
+              <p className="serif text-3xl">{registration.naam}</p>
+              <p className="text-muted">{registration.email}</p>
+            </div>
+          </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
             <div className="space-y-3">
@@ -71,12 +86,12 @@ export function TicketCard({
             ) : null}
           </div>
         )}
-        {!cancelled && isNew && emailSent === false ? (
+        {!cancelled && !waitlisted && isNew && emailSent === false ? (
           <p className="no-print rounded-2xl border border-warn/30 bg-warn/10 px-4 py-3 text-sm">
             We konden geen e-mail versturen. Sla deze pagina op of maak een screenshot van
             je QR-code.
           </p>
-        ) : !cancelled && isNew ? (
+        ) : !cancelled && !waitlisted && isNew ? (
           <p className="no-print text-sm text-muted">
             Je ticket staat ook in je mailbox (met een link om je uit te schrijven). Toon
             deze QR-code aan de ingang.
