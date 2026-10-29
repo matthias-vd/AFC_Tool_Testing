@@ -17,7 +17,11 @@ Dat voegt o.a. toe: ticketing-velden op `events`/`registrations`, zet `ingeschre
 1. [`000_add_afc_ticket_bron.sql`](supabase/migrations/000_add_afc_ticket_bron.sql)
 2. [`001_ticketing.sql`](supabase/migrations/001_ticketing.sql)
 3. Eventueel [`002_ticket_cvs_storage_rls.sql`](supabase/migrations/002_ticket_cvs_storage_rls.sql) / [`003_fix_register_afc_ticket_types.sql`](supabase/migrations/003_fix_register_afc_ticket_types.sql)
-4. [`004_cv_required_waitlist.sql`](supabase/migrations/004_cv_required_waitlist.sql) — CV-toggle + wachtlijst + promote RPC
+4. CV-toggle + wachtlijst — **apart runnen** (SQL-editor kapt grote scripts af):
+   - [`004a_cv_waitlist_columns.sql`](supabase/migrations/004a_cv_waitlist_columns.sql)
+   - [`004b_get_event_ticket_status.sql`](supabase/migrations/004b_get_event_ticket_status.sql)
+   - [`004c_register_afc_ticket_waitlist.sql`](supabase/migrations/004c_register_afc_ticket_waitlist.sql)
+   - [`004d_promote_waitlist.sql`](supabase/migrations/004d_promote_waitlist.sql)
 
 Als je een check-constraint op `registrations.bron` hebt, voeg `'afc_ticket'` toe (zie commentaar in de migratie).
 
